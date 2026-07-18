@@ -150,7 +150,7 @@ export default function MeetingsPage() {
         </button>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 360px", gap: "20px", alignItems: "start" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-5 items-start">
         {/* Calendar */}
         <div className="card">
           {/* Month nav */}
