@@ -2,10 +2,28 @@ import { PrismaClient } from "@prisma/client";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-// In Prisma 7, connection URLs are resolved dynamically from prisma.config.ts at runtime,
-// and the PrismaClient constructor does not accept 'datasources' as option anymore.
-export const db = globalForPrisma.prisma ?? new PrismaClient();
+let prismaInstance: PrismaClient | null = null;
 
-if (process.env.NODE_ENV !== "production") {
-  globalForPrisma.prisma = db;
+function getPrisma(): PrismaClient {
+  if (!prismaInstance) {
+    if (globalForPrisma.prisma) {
+      prismaInstance = globalForPrisma.prisma;
+    } else {
+      prismaInstance = new PrismaClient();
+      if (process.env.NODE_ENV !== "production") {
+        globalForPrisma.prisma = prismaInstance;
+      }
+    }
+  }
+  return prismaInstance;
 }
+
+// Export a Proxy that intercepts all database operations and defers PrismaClient
+// instantiation to runtime (first property access). This prevents Next.js compilation/build-time
+// evaluation errors caused by WASM/edge target engine checks when the environment is uninitialized.
+export const db = new Proxy({} as PrismaClient, {
+  get(target, prop) {
+    const client = getPrisma();
+    return Reflect.get(client, prop);
+  },
+});
