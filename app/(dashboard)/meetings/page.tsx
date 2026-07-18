@@ -61,7 +61,21 @@ function AddMeetingModal({ clients, projects, onClose, onCreated }: {
               </div>
               <div className="form-group">
                 <label className="form-label">Project (optional)</label>
-                <select className="form-select" value={form.projectId} onChange={e => setForm(f => ({ ...f, projectId: e.target.value }))}>
+                <select
+                  className="form-select"
+                  value={form.projectId}
+                  onChange={e => {
+                    const val = e.target.value;
+                    if (val) {
+                      const proj = projects.find(p => p.id === val);
+                      if (proj) {
+                        setForm(f => ({ ...f, projectId: val, clientId: proj.clientId }));
+                        return;
+                      }
+                    }
+                    setForm(f => ({ ...f, projectId: val }));
+                  }}
+                >
                   <option value="">None</option>
                   {clientProjects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
@@ -97,6 +111,8 @@ export default function MeetingsPage() {
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [reschedulingMeetingId, setReschedulingMeetingId] = useState<string | null>(null);
+  const [rescheduleDateTime, setRescheduleDateTime] = useState("");
 
   const fetchMeetings = useCallback(() => {
     const month = format(currentMonth, "yyyy-MM");
@@ -129,6 +145,20 @@ export default function MeetingsPage() {
     if (res.ok) {
       const updated = await res.json();
       setMeetings(prev => prev.map(m => m.id === id ? updated : m));
+    }
+  }
+
+  async function rescheduleMeeting(meetingId: string) {
+    if (!rescheduleDateTime) return;
+    const res = await fetch(`/api/meetings/${meetingId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dateTime: rescheduleDateTime }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setMeetings(prev => prev.map(m => m.id === meetingId ? updated : m));
+      setReschedulingMeetingId(null);
     }
   }
 
@@ -282,23 +312,67 @@ export default function MeetingsPage() {
                       </div>
                     )}
 
-                    {m.status === "scheduled" && (
-                      <div style={{ display: "flex", gap: "6px" }}>
-                        <button
-                          onClick={() => updateStatus(m.id, "completed")}
-                          className="btn btn-xs"
-                          style={{ background: "#dcfce7", color: "#15803d", border: "none" }}
-                        >
-                          ✓ Mark Complete
-                        </button>
-                        <button
-                          onClick={() => updateStatus(m.id, "cancelled")}
-                          className="btn btn-xs"
-                          style={{ background: "#f1f5f9", color: "#64748b", border: "none" }}
-                        >
-                          Cancel
-                        </button>
+                    {reschedulingMeetingId === m.id ? (
+                      <div style={{ marginTop: "8px", display: "flex", flexDirection: "column", gap: "8px" }}>
+                        <label style={{ fontSize: "11px", fontWeight: 600, color: "var(--color-muted-foreground)" }}>Select New Date & Time</label>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <input
+                            type="datetime-local"
+                            className="form-input"
+                            style={{ fontSize: "12px", padding: "4px 8px" }}
+                            value={rescheduleDateTime}
+                            onChange={e => setRescheduleDateTime(e.target.value)}
+                          />
+                        </div>
+                        <div style={{ display: "flex", gap: "6px" }}>
+                          <button
+                            onClick={() => rescheduleMeeting(m.id)}
+                            className="btn btn-xs btn-primary"
+                            disabled={!rescheduleDateTime}
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => setReschedulingMeetingId(null)}
+                            className="btn btn-xs btn-outline"
+                          >
+                            Close
+                          </button>
+                        </div>
                       </div>
+                    ) : (
+                      m.status === "scheduled" && (
+                        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+                          <button
+                            onClick={() => updateStatus(m.id, "completed")}
+                            className="btn btn-xs"
+                            style={{ background: "#dcfce7", color: "#15803d", border: "none" }}
+                          >
+                            ✓ Complete
+                          </button>
+                          <button
+                            onClick={() => {
+                              setReschedulingMeetingId(m.id);
+                              // Convert date to ISO format for input
+                              const current = new Date(m.dateTime);
+                              const tzoffset = current.getTimezoneOffset() * 60000;
+                              const localISOTime = (new Date(current.getTime() - tzoffset)).toISOString().slice(0, 16);
+                              setRescheduleDateTime(localISOTime);
+                            }}
+                            className="btn btn-xs"
+                            style={{ background: "#eff6ff", color: "#1e40af", border: "none" }}
+                          >
+                            Reschedule
+                          </button>
+                          <button
+                            onClick={() => updateStatus(m.id, "cancelled")}
+                            className="btn btn-xs"
+                            style={{ background: "#f1f5f9", color: "#64748b", border: "none" }}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )
                     )}
                   </div>
                 ))}

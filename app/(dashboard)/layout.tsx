@@ -31,6 +31,118 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   // Close sidebar on route change (mobile)
   useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
+  // ─── Meetings Push Notifications & Web Audio Alarms ───
+  useEffect(() => {
+    // 1. Request notification permissions
+    if (typeof window !== "undefined" && "Notification" in window) {
+      if (Notification.permission === "default") {
+        Notification.requestPermission();
+      }
+    }
+
+    // Sound alert generator (creates synth alert ringtone dynamically)
+    function playAlarmBeep() {
+      try {
+        const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, ctx.currentTime); // High pitch A5 beep
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.05);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.15);
+        gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.25);
+        gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.5);
+      } catch (err) {
+        console.warn("AudioContext playback blocked by browser user interaction policy", err);
+      }
+    }
+
+    // Show native notification banner
+    function showNotificationBanner(title: string, body: string) {
+      if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "granted") {
+        new Notification(title, { body, icon: "/favicon.ico" });
+      }
+    }
+
+    // Poller to scan meetings
+    async function checkMeetingsSchedule() {
+      try {
+        const dateObj = new Date();
+        const year = dateObj.getFullYear();
+        const monthNum = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const monthString = `${year}-${monthNum}`;
+
+        const res = await fetch(`/api/meetings?month=${monthString}`);
+        if (!res.ok) return;
+        const scheduledList: any[] = await res.json();
+
+        const nowMs = Date.now();
+
+        scheduledList.forEach((m: any) => {
+          if (m.status !== "scheduled") return;
+
+          const meetingTimeMs = new Date(m.dateTime).getTime();
+          const timeDiffMs = meetingTimeMs - nowMs;
+
+          // 1. One Day Before Notification (within a 10 minute window: 23 hours 50 mins to 24 hours 0 mins)
+          const targetDayMs = 24 * 60 * 60 * 1000;
+          if (timeDiffMs > targetDayMs - 600000 && timeDiffMs <= targetDayMs) {
+            const notifiedKey = `notified_1day_${m.id}`;
+            if (!localStorage.getItem(notifiedKey)) {
+              localStorage.setItem(notifiedKey, "true");
+              playAlarmBeep();
+              showNotificationBanner(
+                "📅 Meeting Tomorrow!",
+                `"${m.title}" with client ${m.client?.name || "Partner"} is scheduled tomorrow at ${new Date(m.dateTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}.`
+              );
+            }
+          }
+
+          // 2. One Hour Before Notification (within a 5 minute window: 55 mins to 60 mins)
+          const targetHourMs = 60 * 60 * 1000;
+          if (timeDiffMs > targetHourMs - 300000 && timeDiffMs <= targetHourMs) {
+            const notifiedKey = `notified_1hour_${m.id}`;
+            if (!localStorage.getItem(notifiedKey)) {
+              localStorage.setItem(notifiedKey, "true");
+              playAlarmBeep();
+              showNotificationBanner(
+                "⏰ Meeting in 1 Hour!",
+                `"${m.title}" starts in 60 minutes. Get ready!`
+              );
+            }
+          }
+
+          // 3. During / At Meeting Time Notification (within a 5 minute window: -5 mins to +1 min)
+          if (timeDiffMs >= -300000 && timeDiffMs <= 60000) {
+            const notifiedKey = `notified_now_${m.id}`;
+            if (!localStorage.getItem(notifiedKey)) {
+              localStorage.setItem(notifiedKey, "true");
+              playAlarmBeep();
+              showNotificationBanner(
+                "🚨 Meeting Starting Now!",
+                `"${m.title}" is scheduled to start now at ${new Date(m.dateTime).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}.`
+              );
+            }
+          }
+        });
+      } catch (err) {
+        console.error("Failed to run meetings background check", err);
+      }
+    }
+
+    // Run check immediately and poll every 30 seconds
+    checkMeetingsSchedule();
+    const interval = setInterval(checkMeetingsSchedule, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   const mockUser = {
     name: "MP Owner",
     role: "owner",
