@@ -1,4 +1,6 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
@@ -9,7 +11,19 @@ function getPrisma(): PrismaClient {
     if (globalForPrisma.prisma) {
       prismaInstance = globalForPrisma.prisma;
     } else {
-      prismaInstance = new PrismaClient();
+      // Resolve direct postgres:// URL dynamically (handles custom prefixes like STORAGE_URL_NON_POOLING)
+      const nonPoolingUrlKey = Object.keys(process.env).find((key) => key.endsWith("_URL_NON_POOLING"));
+      const connectionUrl = nonPoolingUrlKey 
+        ? process.env[nonPoolingUrlKey] 
+        : (process.env.DATABASE_URL || process.env.POSTGRES_URL);
+
+      // In serverless environments, Prisma 7 uses WASM/edge target validation.
+      // We pass the TCP-based PrismaPg driver adapter to connect directly to PostgreSQL.
+      const pool = new pg.Pool({ connectionString: connectionUrl });
+      const adapter = new PrismaPg(pool);
+      
+      prismaInstance = new PrismaClient({ adapter });
+
       if (process.env.NODE_ENV !== "production") {
         globalForPrisma.prisma = prismaInstance;
       }
