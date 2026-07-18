@@ -1,18 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
-const prismaUrlKey = Object.keys(process.env).find((key) => key.endsWith("_PRISMA_URL"));
-const connectionUrl = prismaUrlKey 
-  ? process.env[prismaUrlKey] 
-  : (process.env.DATABASE_URL || process.env.POSTGRES_URL);
-
-const db = new PrismaClient({
-  datasources: {
-    db: {
-      url: connectionUrl,
-    },
-  },
-});
+const db = new PrismaClient();
 
 async function main() {
   console.log("🌱 Seeding database users...");
