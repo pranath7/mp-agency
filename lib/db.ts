@@ -23,6 +23,17 @@ function getPrisma(): PrismaClient {
 // evaluation errors caused by WASM/edge target engine checks when the environment is uninitialized.
 export const db = new Proxy({} as PrismaClient, {
   get(target, prop) {
+    // Bypass React / Next.js / Webpack bundler internal property checks during build-time static analysis
+    if (
+      typeof prop === "symbol" ||
+      prop.toString().startsWith("$$") ||
+      prop === "then" ||
+      prop === "toJSON" ||
+      prop === "constructor"
+    ) {
+      return undefined;
+    }
+    
     const client = getPrisma();
     return Reflect.get(client, prop);
   },
