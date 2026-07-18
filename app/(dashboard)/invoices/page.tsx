@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { FileText, Plus, IndianRupee, Check, Filter } from "lucide-react";
@@ -13,7 +13,7 @@ const statusOptions = [
   { value: "overdue", label: "Overdue" },
 ];
 
-export default function InvoicesPage() {
+function InvoicesContent() {
   const searchParams = useSearchParams();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,5 +147,13 @@ export default function InvoicesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function InvoicesPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading invoices...</div>}>
+      <InvoicesContent />
+    </Suspense>
   );
 }

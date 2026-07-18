@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { FolderKanban, Plus, Search, Filter } from "lucide-react";
@@ -13,7 +13,7 @@ const statusOptions = [
   { value: "on-hold", label: "On Hold" },
 ];
 
-export default function ProjectsPage() {
+function ProjectsContent() {
   const searchParams = useSearchParams();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -170,5 +170,13 @@ export default function ProjectsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ProjectsPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading projects...</div>}>
+      <ProjectsContent />
+    </Suspense>
   );
 }
