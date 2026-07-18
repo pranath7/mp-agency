@@ -146,7 +146,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               background: "var(--color-muted)", borderRadius: "8px",
               padding: "5px 12px", fontWeight: 500,
               border: "1px solid var(--color-border)",
-            }}>
+            }} className="topbar-date">
               {new Date().toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -163,10 +163,69 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
 
+      {/* Mobile Bottom Navigation Bar */}
+      <div className="mobile-bottom-nav">
+        {navItems.map(({ href, label, icon: Icon }) => {
+          const isActive = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={`mobile-bottom-link${isActive ? " active" : ""}`}
+            >
+              <Icon size={18} />
+              <span>{label}</span>
+            </Link>
+          );
+        })}
+      </div>
+
       <style>{`
+        .mobile-bottom-nav {
+          display: none;
+          position: fixed;
+          bottom: 16px;
+          left: 16px;
+          right: 16px;
+          z-index: 40;
+          background: rgba(15, 23, 42, 0.88); /* Sleek dark theme matching sidebar */
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          border-radius: 16px;
+          padding: 8px 4px;
+          box-shadow: 0 10px 25px -3px rgba(0,0,0,0.3);
+          justify-content: space-around;
+          align-items: center;
+        }
+        .mobile-bottom-link {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 4px;
+          color: #64748b;
+          text-decoration: none;
+          font-size: 9px;
+          font-weight: 700;
+          padding: 6px 4px;
+          border-radius: 10px;
+          transition: all 0.2s ease;
+          flex: 1;
+        }
+        .mobile-bottom-link.active {
+          color: #3b82f6;
+          transform: scale(1.05);
+        }
         @media (max-width: 1024px) {
           .mobile-overlay { display: block !important; }
           .mobile-menu-btn { display: flex !important; }
+        }
+        @media (max-width: 768px) {
+          .mobile-bottom-nav { display: flex; }
+          .mobile-menu-btn { display: none !important; } /* Replace sidebar with bottom bar */
+          .mobile-overlay { display: none !important; }
+          .topbar-date { display: none !important; } /* Simplify header on mobile */
+          .page-content { padding-bottom: 96px !important; }
         }
       `}</style>
     </div>
