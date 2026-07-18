@@ -59,7 +59,7 @@ export default function DashboardPage() {
             <div className="page-subtitle">Welcome back! Here's what's happening.</div>
           </div>
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", marginBottom: "28px" }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="skeleton" style={{ height: "120px" }} />
           ))}
@@ -107,7 +107,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: "16px", marginBottom: "28px" }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
         <StatCard
           icon={<FolderKanban size={20} />}
           label="Active Projects"
@@ -139,7 +139,7 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Overdue Invoices */}
         <div className="card">
           <div className="card-header">
@@ -239,7 +239,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Projects */}
-        <div className="card" style={{ gridColumn: "1 / -1" }}>
+        <div className="card lg:col-span-2">
           <div className="card-header">
             <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
               <TrendingUp size={16} color="var(--color-primary)" />
@@ -250,7 +250,8 @@ export default function DashboardPage() {
             </Link>
           </div>
           <div className="card-body" style={{ padding: "0 20px 16px" }}>
-            <table className="data-table">
+            <div className="overflow-x-auto w-full">
+              <table className="data-table min-w-[600px]">
               <thead>
                 <tr>
                   <th>Project</th>
@@ -287,6 +288,7 @@ export default function DashboardPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>
