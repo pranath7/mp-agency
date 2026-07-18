@@ -43,7 +43,7 @@ export default function ClientDetailPage() {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "340px 1fr", gap: "20px", alignItems: "start" }}>
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-5 items-start">
         {/* Left: Details card */}
         <div className="card">
           <div className="card-header">

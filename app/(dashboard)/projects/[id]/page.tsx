@@ -292,7 +292,7 @@ export default function ProjectWorkspacePage() {
       </div>
 
       {/* Top panels */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "16px", marginBottom: "24px" }}>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {/* Details */}
         <div className="card">
           <div className="card-header">

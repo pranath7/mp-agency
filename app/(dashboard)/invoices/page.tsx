@@ -50,7 +50,7 @@ function InvoicesContent() {
       </div>
 
       {/* Summary cards */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "16px", marginBottom: "24px" }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
         {[
           { label: "Pending", amount: totalPending, count: invoices.filter(i => i.status === "pending").length, color: "#D97706", bg: "#fffbeb" },
           { label: "Collected", amount: totalPaid, count: invoices.filter(i => i.status === "paid").length, color: "#059669", bg: "#ecfdf5" },
@@ -93,7 +93,8 @@ function InvoicesContent() {
               </Link>
             </div>
           ) : (
-            <table className="data-table">
+            <div className="overflow-x-auto w-full">
+              <table className="data-table min-w-[700px]">
               <thead>
                 <tr>
                   <th>Project</th>
@@ -143,6 +144,7 @@ function InvoicesContent() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
       </div>
