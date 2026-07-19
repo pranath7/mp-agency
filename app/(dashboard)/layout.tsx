@@ -168,24 +168,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar */}
       <aside className={`sidebar${sidebarOpen ? " open" : ""}`}>
         {/* Logo */}
-        <div className="sidebar-logo">
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{
-              width: "34px", height: "34px",
-              background: "linear-gradient(135deg, #2563EB, #059669)",
-              borderRadius: "9px",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <Briefcase size={18} color="white" />
-            </div>
-            <div>
-              <div style={{ color: "white", fontWeight: 700, fontSize: "14px", lineHeight: 1.2 }}>
-                MP Digital
-              </div>
-              <div style={{ color: "#64748b", fontSize: "11px" }}>Agency Platform</div>
-            </div>
-          </div>
+        <div className="sidebar-logo" style={{ display: "flex", alignItems: "center", padding: "14px 20px" }}>
+          <img src="/logo.png" alt="MP Digital Logo" style={{ height: "42px", objectFit: "contain", borderRadius: "6px" }} />
         </div>
 
         {/* Nav */}
